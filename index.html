@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MGT 628 — Sustainability DCF & Sensitivity Analysis Lab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    input[type="range"] { accent-color: #0f766e; }
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-slate-900 text-white border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <span class="text-xs font-semibold uppercase tracking-widest text-teal-400">MGT 628 • Global Sustainability Strategy • Prof. Ru-Shiun Liou</span>
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight mt-1">Student Project DCF &amp; Sensitivity Sandbox</h1>
+        <p class="text-sm text-slate-300 mt-1">
+          Interactive 5-Year Capital Budgeting &amp; Adverse Scenario Lab Customized to Milestone 2 Student Projects
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button onclick="exportMarkdownTable()" class="px-3.5 py-2 text-xs font-semibold bg-teal-600 hover:bg-teal-500 text-white rounded-lg shadow transition">
+          Copy Markdown Table for Journal
+        </button>
+        <button onclick="window.print()" class="px-3.5 py-2 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg transition">
+          Print / Save PDF
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- Student Project Selector -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+      <div class="flex flex-col gap-3">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500">Select MGT 628 Student Project Preset</h2>
+          <span id="studentBadge" class="text-xs font-semibold text-teal-700 bg-teal-50 px-2.5 py-1 rounded-md border border-teal-200"></span>
+        </div>
+        <div class="flex flex-wrap gap-2" id="presetButtons">
+          <button onclick="loadPreset('target')" id="btn-target" class="preset-btn px-3.5 py-2 rounded-lg text-xs font-semibold border transition">
+            1. Target Packaging ($M)
+          </button>
+          <button onclick="loadPreset('delta')" id="btn-delta" class="preset-btn px-3.5 py-2 rounded-lg text-xs font-semibold border transition">
+            2. Delta SAF Supply ($M)
+          </button>
+          <button onclick="loadPreset('ford')" id="btn-ford" class="preset-btn px-3.5 py-2 rounded-lg text-xs font-semibold border transition">
+            3. Ford Battery Recycling ($M)
+          </button>
+          <button onclick="loadPreset('tbm')" id="btn-tbm" class="preset-btn px-3.5 py-2 rounded-lg text-xs font-semibold border transition">
+            4. Tampa Bay Markets ($K)
+          </button>
+          <button onclick="loadPreset('hcaa')" id="btn-hcaa" class="preset-btn px-3.5 py-2 rounded-lg text-xs font-semibold border transition">
+            5. TPA Airport / HCAA ($M)
+          </button>
+          <button onclick="loadPreset('morgan')" id="btn-morgan" class="preset-btn px-3.5 py-2 rounded-lg text-xs font-semibold border transition">
+            6. Morgan Stanley ($M)
+          </button>
+          <button onclick="loadPreset('custom')" id="btn-custom" class="preset-btn px-3.5 py-2 rounded-lg text-xs font-semibold border transition">
+            + Custom Project
+          </button>
+        </div>
+        <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs text-slate-700 leading-relaxed" id="caseDescription"></div>
+      </div>
+    </section>
+
+    <!-- 3-Step Grid -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- STEP 1: Numerator -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center gap-2.5 mb-2">
+            <span class="step-badge bg-teal-100 text-teal-800">1</span>
+            <h3 class="text-base font-bold text-slate-900">Numerator: Cash Flows &amp; CapEx</h3>
+          </div>
+          <p class="text-xs text-slate-500 mb-4">
+            <strong>Whelan &amp; Douglas (2021) / Koller et al. (2019):</strong> Quantify operational cost savings, avoided regulatory/EPR penalties, and revenue/loyalty drivers (<span class="unit-label">$M</span>).
+          </p>
+
+          <!-- Option A -->
+          <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 mb-3">
+            <h4 id="optATitle" class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Option A: Status Quo / Minimal Compliance</h4>
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label class="block text-[11px] text-slate-600 mb-1">Initial CapEx (<span class="unit-label">$M</span>)</label>
+                <input type="number" step="0.5" id="capexA" oninput="recalculate()" class="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-md" />
+              </div>
+              <div>
+                <label class="block text-[11px] text-slate-600 mb-1">Annual FCF (Yr 1–5)</label>
+                <input type="number" step="0.5" id="fcfA" oninput="recalculate()" class="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-md" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Option B -->
+          <div class="bg-teal-50/50 p-3 rounded-lg border border-teal-200">
+            <h4 id="optBTitle" class="text-xs font-bold uppercase tracking-wider text-teal-900 mb-2">Option B: Priority Strategic Initiative</h4>
+            <div class="space-y-2">
+              <div>
+                <label class="block text-[11px] text-slate-700 mb-0.5">Initial CapEx (<span class="unit-label">$M</span>)</label>
+                <input type="number" step="0.5" id="capexB" oninput="recalculate()" class="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-md" />
+              </div>
+              <div>
+                <label id="lever1Label" class="block text-[11px] text-slate-700 mb-0.5">1. Operational / Material Savings (Yr 1–5)</label>
+                <input type="number" step="0.5" id="fcfB1" oninput="recalculate()" class="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-md" />
+              </div>
+              <div>
+                <label id="lever2Label" class="block text-[11px] text-slate-700 mb-0.5">2. Avoided Regulatory / Compliance Cost (Yr 1–5)</label>
+                <input type="number" step="0.5" id="fcfB2" oninput="recalculate()" class="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-md" />
+              </div>
+              <div>
+                <label id="lever3Label" class="block text-[11px] text-slate-700 mb-0.5">3. Commercial / Loyalty / Avoided Retrofit Value</label>
+                <input type="number" step="0.5" id="fcfB3" oninput="recalculate()" class="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-md" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-200 flex justify-between items-center text-sm">
+          <span class="font-medium text-slate-600">Option B Base Annual FCF:</span>
+          <span id="totalFcfBDisplay" class="font-bold text-teal-700 text-base"></span>
+        </div>
+      </div>
+
+      <!-- STEP 2: Denominator -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center gap-2.5 mb-2">
+            <span class="step-badge bg-indigo-100 text-indigo-800">2</span>
+            <h3 class="text-base font-bold text-slate-900">Denominator: Cost of Capital (WACC)</h3>
+          </div>
+          <p class="text-xs text-slate-500 mb-4">
+            <strong>Bolton et al. (2022) / Cornell &amp; Damodaran (2020):</strong> Model how unhedged transition, supply-chain, or credibility risk affects the discount rate.
+          </p>
+
+          <div class="space-y-3.5">
+            <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-xs font-bold text-slate-700">Option A WACC (% Unhedged Risk)</label>
+                <span id="pvifaADisplay" class="text-xs font-mono text-slate-500"></span>
+              </div>
+              <input type="number" step="0.1" id="waccA" oninput="recalculate()" class="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-md" />
+            </div>
+
+            <div class="bg-indigo-50/50 p-3 rounded-lg border border-indigo-200">
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-xs font-bold text-indigo-900">Option B Base WACC (% Hedged Risk)</label>
+                <span id="pvifaBDisplay" class="text-xs font-mono text-indigo-700"></span>
+              </div>
+              <input type="number" step="0.1" id="waccB" oninput="recalculate()" class="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-md" />
+            </div>
+
+            <div class="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-1">
+              <div class="font-bold">Avoid Double-Counting (Cornell &amp; Damodaran, 2020)</div>
+              <p id="waccNoteText" class="text-amber-800 leading-relaxed"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-200 flex justify-between items-center text-sm">
+          <span class="font-medium text-slate-600">Cost of Capital Spread (A vs. B):</span>
+          <span id="waccSpreadDisplay" class="font-bold text-indigo-700"></span>
+        </div>
+      </div>
+
+      <!-- STEP 3: Pivotal Variable & Stress Test -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="step-badge bg-rose-100 text-rose-800">3</span>
+              <h3 class="text-base font-bold text-slate-900">Pivotal Assumption Stress Test</h3>
+            </div>
+            <button onclick="applyAdversePreset()" class="px-2.5 py-1 text-xs font-semibold bg-rose-100 hover:bg-rose-200 text-rose-800 rounded-md transition">
+              Simulate Adverse Case
+            </button>
+          </div>
+          <p class="text-xs text-slate-500 mb-3">
+            <strong>Schramade (2016):</strong> Isolate the single variable driving the valuation delta and test whether NPV stays positive under severe stress.
+          </p>
+
+          <div class="mb-3.5 p-3 bg-slate-100 rounded-lg border border-slate-200">
+            <div class="text-[11px] font-bold uppercase text-slate-500">Milestone 2 Isolated Pivotal Variable</div>
+            <div id="pivotalVariableTitle" class="text-xs font-semibold text-slate-900 mt-0.5"></div>
+          </div>
+
+          <div class="mb-4">
+            <div class="flex justify-between text-xs font-semibold mb-1">
+              <label for="fcfShockSlider" class="text-slate-700">Annual Cash Flow Shock (<span class="unit-label">$M</span>/yr)</label>
+              <span id="fcfShockValue" class="font-mono text-rose-700"></span>
+            </div>
+            <input type="range" id="fcfShockSlider" min="-15" max="5" step="0.25" value="0" oninput="recalculate()" class="w-full cursor-pointer" />
+            <div class="flex justify-between text-[11px] text-slate-400 mt-0.5">
+              <span>Severe Downside</span>
+              <span>Base (0)</span>
+              <span>Upside</span>
+            </div>
+          </div>
+
+          <div class="mb-3.5">
+            <div class="flex justify-between text-xs font-semibold mb-1">
+              <label for="waccShockSlider" class="text-slate-700">Option B WACC Stress (+bps)</label>
+              <span id="waccShockValue" class="font-mono text-rose-700"></span>
+            </div>
+            <input type="range" id="waccShockSlider" min="-50" max="250" step="25" value="0" oninput="recalculate()" class="w-full cursor-pointer" />
+            <div class="flex justify-between text-[11px] text-slate-400 mt-0.5">
+              <span>-50 bps</span>
+              <span>Base (0 bps)</span>
+              <span>+250 bps</span>
+            </div>
+          </div>
+
+          <button onclick="resetStressSliders()" class="w-full py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-md transition">
+            Reset Sliders to Base Case
+          </button>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-200 flex justify-between items-center text-sm">
+          <span class="font-medium text-slate-600">Break-Even Annual FCF (NPV = 0):</span>
+          <span id="breakEvenFcfDisplay" class="font-bold text-slate-900"></span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- KPI Cards -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+        <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Option A Base NPV</div>
+        <div id="kpiNpvA" class="text-2xl font-extrabold text-slate-800 mt-1"></div>
+        <div id="kpiSubA" class="text-xs text-slate-500 mt-1"></div>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-teal-200">
+        <div class="text-xs font-bold uppercase tracking-wider text-teal-600">Option B Base NPV</div>
+        <div id="kpiNpvBBase" class="text-2xl font-extrabold text-teal-700 mt-1"></div>
+        <div id="kpiSubBBase" class="text-xs text-slate-500 mt-1"></div>
+      </div>
+
+      <div id="stressedCard" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 transition">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Option B Stressed NPV</span>
+          <span id="stressStatusBadge" class="px-2 py-0.5 text-[11px] font-bold rounded-full"></span>
+        </div>
+        <div id="kpiNpvBStressed" class="text-2xl font-extrabold text-slate-900 mt-1"></div>
+        <div id="kpiSubBStressed" class="text-xs text-slate-500 mt-1"></div>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+        <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Cushion Above Break-Even</div>
+        <div id="kpiSafetyMargin" class="text-2xl font-extrabold text-slate-800 mt-1"></div>
+        <div id="kpiSubBreakEven" class="text-xs text-slate-500 mt-1"></div>
+      </div>
+    </section>
+
+    <!-- Chart & Summary Table -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div class="lg:col-span-7 bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+        <h3 class="text-base font-bold text-slate-900">5-Year Present Value &amp; NPV Comparison</h3>
+        <p class="text-xs text-slate-500 mb-3">Initial CapEx, Present Value of 5-Yr Cash Flows, and Net Present Value</p>
+        <div class="h-80">
+          <canvas id="npvChart"></canvas>
+        </div>
+      </div>
+
+      <div class="lg:col-span-5 bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+        <div>
+          <h3 class="text-base font-bold text-slate-900 mb-1">Milestone 3 Journal Summary &amp; Guardrails</h3>
+          <p class="text-xs text-slate-500 mb-3">Ready-to-cite comparative figures and executive decision rules</p>
+
+          <div class="overflow-x-auto border border-slate-200 rounded-lg mb-4">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-100 text-slate-600 uppercase">
+                <tr>
+                  <th class="py-2 px-2.5">Metric</th>
+                  <th class="py-2 px-2.5">Opt A (Base)</th>
+                  <th class="py-2 px-2.5">Opt B (Base)</th>
+                  <th class="py-2 px-2.5">Opt B (Stressed)</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 font-medium" id="summaryTableBody"></tbody>
+            </table>
+          </div>
+
+          <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200 text-xs space-y-1.5">
+            <div class="font-bold text-slate-800 uppercase tracking-wider">CFO Guardrail &amp; Milestone 2 Link</div>
+            <p id="cfoVerdictText" class="text-slate-600 leading-relaxed"></p>
+          </div>
+        </div>
+
+        <div id="copyToast" class="hidden mt-3 text-center py-2 px-3 bg-teal-50 text-teal-800 text-xs font-semibold rounded-lg border border-teal-200">
+          Copied Markdown table to clipboard!
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const PRESETS = {
+      target: {
+        name: "Target Corp ($M)",
+        students: "Gianna Calabro & Kelsey Winters",
+        unit: "$M",
+        optA: "Option A: Delay to 2035 & Pay State EPR Fees",
+        optB: "Option B: Owned-Brand Circular Packaging Redesign (≥15% Virgin Cut)",
+        description: "Target missed its 2025 packaging goals (at 34%–41% circularity; 47,000t virgin plastic, +22% vs 2020 baseline) while state EPR fees took effect in CO and CA in 2026. Option B redesigns high-volume owned brands for a ≥15% virgin plastic cut with zero retail price hike.",
+        capexA: 35.0, fcfA: 9.5, waccA: 8.5,
+        capexB: 75.0, fcfB1: 15.0, fcfB2: 6.5, fcfB3: 3.5, waccB: 8.0,
+        lever1: "1. Virgin Material & Freight Weight Savings",
+        lever2: "2. Avoided State EPR Fees (CO, CA, +5 States)",
+        lever3: "3. Owned-Brand Share & Guest Trust Protection",
+        pivotalTitle: "PCR Resin Supplier Cost Pass-Through (With $0 Guest Price Premium)",
+        waccNote: "State EPR fee avoidance is modeled in Step 1 Cash Flows; Step 2 WACC (-50 bps) captures reduced investor credibility risk after missing 2025 targets.",
+        guardrailNote: "Require 24-month supplier scaling contracts that cap PCR resin cost pass-throughs and verify metrics via third-party assurance.",
+        shockMin: -12, shockMax: 5, shockStep: 0.25, adverseFcfShock: -6.5, adverseWaccShock: 25
+      },
+      delta: {
+        name: "Delta Air Lines ($M)",
+        students: "Darren Carter",
+        unit: "$M",
+        optA: "Option A: Spot-Market SAF + Legacy Fuel Mix",
+        optB: "Option B: Multi-Year SAF Offtake + Corporate Scope 3 Co-Funding",
+        description: "Delta's 2025 SAF volume was 23.4M gallons (<1% of fuel vs 10% 2030 goal), while jet fuel drives ~90% of emissions. Option B pairs long-term producer offtake contracts with corporate Scope 3 certificate buyers (modeled on AA–Google's 35M-gal deal).",
+        capexA: 45.0, fcfA: 13.0, waccA: 10.0,
+        capexB: 130.0, fcfB1: 21.0, fcfB2: 12.0, fcfB3: 7.5, waccB: 9.0,
+        lever1: "1. Fuel Efficiency & Hedged Offtake Savings",
+        lever2: "2. Corporate Scope 3 Co-Funding & Clean Fuel Credits",
+        lever3: "3. Corporate Account Retention & Carbon Penalty Avoidance",
+        pivotalTitle: "SAF Price Premium After Corporate Contributions & Producer Delivery Lag",
+        waccNote: "Corporate Scope 3 contributions and tax credits sit in Step 1 FCF; Step 2 WACC (-100 bps) reflects lower carbon tail-risk exposure (Bolton et al., 2022).",
+        guardrailNote: "Include Darren's milestone review clauses allowing Delta to adjust commitments if SAF producers fail to meet delivery schedules.",
+        shockMin: -16, shockMax: 6, shockStep: 0.5, adverseFcfShock: -7.5, adverseWaccShock: 50
+      },
+      ford: {
+        name: "Ford Motor Co ($M)",
+        students: "William Cleverley",
+        unit: "$M",
+        optA: "Option A: Virgin Mineral Imports & Standard Compliance",
+        optB: "Option B: Closed-Loop EV Battery Recycling & Mineral Recovery",
+        description: "Following a $32.5B EV outlay and incentive rollbacks, Ford faces high urgency (score 17/18) to lower battery costs for 2027 budget EVs (e.g., Ford Fathom) and comply with EU Battery Regulation 2023/1542 and Dodd-Frank mineral rules.",
+        capexA: 60.0, fcfA: 17.0, waccA: 10.5,
+        capexB: 150.0, fcfB1: 26.0, fcfB2: 11.0, fcfB3: 9.0, waccB: 9.5,
+        lever1: "1. Recycled Lithium/Nickel/Cobalt Cell Cost Savings",
+        lever2: "2. EU Reg 2023/1542 & Conflict Mineral Compliance Savings",
+        lever3: "3. Budget EV Margin & Blue-Collar Brand Uplift",
+        pivotalTitle: "Battery Mineral Recovery Yield & U.S. Budget EV Adoption Rate",
+        waccNote: "Mineral recovery savings are in Step 1 FCF; Step 2 WACC (-100 bps) captures reduced supply-chain dependence on Chinese cell processing.",
+        guardrailNote: "Stage recycling CapEx alongside verified black-mass recovery throughput and auditable mineral traceability reporting.",
+        shockMin: -18, shockMax: 6, shockStep: 0.5, adverseFcfShock: -8.5, adverseWaccShock: 50
+      },
+      tbm: {
+        name: "Tampa Bay Markets ($K)",
+        students: "Guillermo Jauregui",
+        unit: "$K",
+        optA: "Option A: Unverified Single-Use Compostable Substitution",
+        optB: "Option B: Staged Multi-Market Reusable & Waste-Prevention Pilot",
+        description: "Across 13–16 community markets (40–130 vendors; 1,000+ attendees), 81% of surveyed shoppers prefer alternatives and 49% of waste is potentially divertible, but local processors reject many compostables. Option B runs a measured reusable/prevention pilot.",
+        capexA: 45.0, fcfA: 14.0, waccA: 11.5,
+        capexB: 110.0, fcfB1: 19.0, fcfB2: 11.0, fcfB3: 8.0, waccB: 10.5,
+        lever1: "1. Avoided Single-Use Packaging & Hauling Fees",
+        lever2: "2. Green Sponsor & Municipal Host Contract Retention",
+        lever3: "3. Vendor & Shopper Loyalty Uplift (SDG 12.5)",
+        pivotalTitle: "Customer Container Return Rate & Washing/Handling Labor Cost per Event",
+        waccNote: "Washing, storage, and replacement costs are netted in Step 1 FCF; Step 2 WACC (-100 bps) reflects lower greenwashing and host-property termination risk.",
+        guardrailNote: "Enforce Guillermo's 5 pilot gates: scale across all markets only if container return rates and cost-per-transaction beat baseline thresholds.",
+        shockMin: -20, shockMax: 8, shockStep: 0.5, adverseFcfShock: -9.5, adverseWaccShock: 50
+      },
+      hcaa: {
+        name: "HCAA / TPA Airport ($M)",
+        students: "Katie Nichter",
+        unit: "$M",
+        optA: "Option A: Defer SAF Infrastructure Until Post-2029 Airside D Retrofit",
+        optB: "Option B: Proactive SAF Readiness Integrated in $1.528B Airside D Design",
+        description: "HCAA ($421.3M FY25 revenue; 24.5M passengers) is building the $1.528B Airside D expansion (opening 2029). Option B integrates SAF blending/hydrant readiness during current design phases to avoid costly post-2029 structural apron retrofits.",
+        capexA: 28.0, fcfA: 7.5, waccA: 7.5,
+        capexB: 68.0, fcfB1: 12.5, fcfB2: 5.5, fcfB3: 4.5, waccB: 6.75,
+        lever1: "1. Avoided Post-2029 Structural Apron/Hydrant Retrofit Costs",
+        lever2: "2. FAA Sustainability Grants & Airline Flowage Fees",
+        lever3: "3. International Carrier Attraction & Resilience Synergy",
+        pivotalTitle: "Verified Airline Tenant SAF Uptake at TPA & Retrofit Escalation Avoidance",
+        waccNote: "Avoided retrofit costs and grant inflows are in Step 1 FCF; Step 2 WACC (-75 bps) reflects municipal revenue-bond green financing advantage.",
+        guardrailNote: "Execute Katie's Stage-1 SAF feasibility study to lock in airline tenant offtake letters of intent before finalizing Airside D fuel construction.",
+        shockMin: -10, shockMax: 5, shockStep: 0.25, adverseFcfShock: -5.5, adverseWaccShock: 25
+      },
+      morgan: {
+        name: "Morgan Stanley ($M)",
+        students: "Alexa Sifakis",
+        unit: "$M",
+        optA: "Option A: Manual Deal Tagging & Headline Volume Reporting",
+        optB: "Option B: Audited Impact-Outcome & Financed-Emissions Analytics Platform",
+        description: "Morgan Stanley mobilized >$815B toward its $1T 2030 goal but had to revise historical figures downward by ~$120B after an internal review. Option B builds an auditable impact-measurement platform linking capital to verified GHG reductions.",
+        capexA: 30.0, fcfA: 9.0, waccA: 9.5,
+        capexB: 72.0, fcfB1: 14.0, fcfB2: 7.5, fcfB3: 5.0, waccB: 8.75,
+        lever1: "1. Institutional & Wealth Management Advisory Fee Retention",
+        lever2: "2. Avoided Restatement Audit & Regulatory Remediation Costs",
+        lever3: "3. Green Underwriting Share vs. JPMorgan & Goldman Sachs",
+        pivotalTitle: "Client Advisory Fee Uplift & Regulatory Restatement Penalty Avoidance",
+        waccNote: "Advisory fees and avoided audit rework sit in Step 1 FCF; Step 2 WACC (-75 bps) captures lower reputational and regulatory enforcement tail risk.",
+        guardrailNote: "Require clear environmental-outcome accounting methodologies and client survey validation before tagging eligible sustainable transactions.",
+        shockMin: -12, shockMax: 5, shockStep: 0.25, adverseFcfShock: -6.5, adverseWaccShock: 50
+      },
+      custom: {
+        name: "Custom Project ($M)",
+        students: "Custom Student Entry",
+        unit: "$M",
+        optA: "Option A: Status Quo / Compliance Baseline",
+        optB: "Option B: Proactive Sustainability Initiative",
+        description: "Enter your own company's CapEx, 3 ROSI cash-flow drivers, and WACC estimates to compute your 5-year NPV and break-even threshold.",
+        capexA: 25.0, fcfA: 7.5, waccA: 9.5,
+        capexB: 50.0, fcfB1: 10.0, fcfB2: 4.0, fcfB3: 3.0, waccB: 8.5,
+        lever1: "1. Operational / Resource Efficiency Savings",
+        lever2: "2. Avoided Regulatory / Carbon Risk Costs",
+        lever3: "3. Revenue / Loyalty / Intangible Value Driver",
+        pivotalTitle: "Primary Cash Flow Driver & Hurdle Rate Sensitivity",
+        waccNote: "Keep expected compliance cash outflows in Step 1 and systematic risk premiums in Step 2.",
+        guardrailNote: "Establish milestone KPIs that must be verified before releasing Phase 2 capital.",
+        shockMin: -10, shockMax: 5, shockStep: 0.25, adverseFcfShock: -4.5, adverseWaccShock: 50
+      }
+    };
+
+    let currentPresetKey = "target";
+    let npvChartInstance = null;
+
+    function calcPVIFA(rateDecimal, years = 5) {
+      if (rateDecimal <= 0) return years;
+      return (1 - Math.pow(1 + rateDecimal, -years)) / rateDecimal;
+    }
+
+    function fmtCurrency(val, unit, showSign = false) {
+      const sign = val < 0 ? "-" : (showSign && val > 0 ? "+" : "");
+      return `${sign}$${Math.abs(val).toFixed(2)}${unit.replace("$", "")}`;
+    }
+
+    function loadPreset(key) {
+      currentPresetKey = key;
+      const p = PRESETS[key];
+
+      document.querySelectorAll(".preset-btn").forEach(btn => {
+        btn.className = "preset-btn px-3.5 py-2 rounded-lg text-xs font-semibold border transition bg-slate-50 text-slate-700 border-slate-300 hover:bg-slate-100";
+      });
+      const activeBtn = document.getElementById(`btn-${key}`);
+      if (activeBtn) {
+        activeBtn.className = "preset-btn px-3.5 py-2 rounded-lg text-xs font-semibold border transition bg-teal-700 text-white border-teal-700 shadow-sm";
+      }
+
+      document.getElementById("studentBadge").textContent = `Student Project: ${p.students}`;
+      document.getElementById("caseDescription").textContent = p.description;
+      document.getElementById("optATitle").textContent = p.optA;
+      document.getElementById("optBTitle").textContent = p.optB;
+      document.getElementById("waccNoteText").textContent = p.waccNote;
+      document.querySelectorAll(".unit-label").forEach(el => el.textContent = p.unit);
+
+      document.getElementById("capexA").value = p.capexA;
+      document.getElementById("fcfA").value = p.fcfA;
+      document.getElementById("waccA").value = p.waccA;
+
+      document.getElementById("capexB").value = p.capexB;
+      document.getElementById("fcfB1").value = p.fcfB1;
+      document.getElementById("fcfB2").value = p.fcfB2;
+      document.getElementById("fcfB3").value = p.fcfB3;
+      document.getElementById("waccB").value = p.waccB;
+
+      document.getElementById("lever1Label").textContent = p.lever1;
+      document.getElementById("lever2Label").textContent = p.lever2;
+      document.getElementById("lever3Label").textContent = p.lever3;
+      document.getElementById("pivotalVariableTitle").textContent = p.pivotalTitle;
+
+      const slider = document.getElementById("fcfShockSlider");
+      slider.min = p.shockMin;
+      slider.max = p.shockMax;
+      slider.step = p.shockStep;
+      slider.value = 0;
+
+      document.getElementById("waccShockSlider").value = 0;
+      recalculate();
+    }
+
+    function applyAdversePreset() {
+      const p = PRESETS[currentPresetKey];
+      document.getElementById("fcfShockSlider").value = p.adverseFcfShock;
+      document.getElementById("waccShockSlider").value = p.adverseWaccShock;
+      recalculate();
+    }
+
+    function resetStressSliders() {
+      document.getElementById("fcfShockSlider").value = 0;
+      document.getElementById("waccShockSlider").value = 0;
+      recalculate();
+    }
+
+    function recalculate() {
+      const p = PRESETS[currentPresetKey];
+      const unit = p.unit;
+
+      const capexA = parseFloat(document.getElementById("capexA").value) || 0;
+      const fcfA = parseFloat(document.getElementById("fcfA").value) || 0;
+      const waccA = (parseFloat(document.getElementById("waccA").value) || 0) / 100;
+
+      const capexB = parseFloat(document.getElementById("capexB").value) || 0;
+      const fcfB1 = parseFloat(document.getElementById("fcfB1").value) || 0;
+      const fcfB2 = parseFloat(document.getElementById("fcfB2").value) || 0;
+      const fcfB3 = parseFloat(document.getElementById("fcfB3").value) || 0;
+      const fcfBBase = fcfB1 + fcfB2 + fcfB3;
+      const waccBBase = (parseFloat(document.getElementById("waccB").value) || 0) / 100;
+
+      const fcfShock = parseFloat(document.getElementById("fcfShockSlider").value) || 0;
+      const waccShockBps = parseFloat(document.getElementById("waccShockSlider").value) || 0;
+
+      const fcfBStressed = fcfBBase + fcfShock;
+      const waccBStressed = Math.max(0.005, waccBBase + (waccShockBps / 10000));
+
+      const pvifaA = calcPVIFA(waccA, 5);
+      const pvA = fcfA * pvifaA;
+      const npvA = -capexA + pvA;
+
+      const pvifaBBase = calcPVIFA(waccBBase, 5);
+      const pvBBase = fcfBBase * pvifaBBase;
+      const npvBBase = -capexB + pvBBase;
+
+      const pvifaBStressed = calcPVIFA(waccBStressed, 5);
+      const pvBStressed = fcfBStressed * pvifaBStressed;
+      const npvBStressed = -capexB + pvBStressed;
+
+      const breakEvenFcfB = capexB / pvifaBStressed;
+      const safetyMargin = fcfBStressed - breakEvenFcfB;
+      const maxDropPct = fcfBBase > 0 ? ((fcfBBase - breakEvenFcfB) / fcfBBase) * 100 : 0;
+
+      document.getElementById("totalFcfBDisplay").textContent = `${fmtCurrency(fcfBBase, unit, true)}/yr`;
+      document.getElementById("pvifaADisplay").textContent = `5-Yr PVIFA: ${pvifaA.toFixed(4)}`;
+      document.getElementById("pvifaBDisplay").textContent = `5-Yr PVIFA: ${pvifaBBase.toFixed(4)}`;
+
+      const spreadBps = Math.round((waccA - waccBBase) * 10000);
+      document.getElementById("waccSpreadDisplay").textContent = `${spreadBps >= 0 ? "+" : ""}${spreadBps} bps`;
+
+      document.getElementById("fcfShockValue").textContent = `${fmtCurrency(fcfShock, unit, true)}/yr`;
+      document.getElementById("waccShockValue").textContent = `${waccShockBps >= 0 ? "+" : ""}${waccShockBps} bps`;
+      document.getElementById("breakEvenFcfDisplay").textContent = `${fmtCurrency(breakEvenFcfB, unit)}/yr`;
+
+      document.getElementById("kpiNpvA").textContent = fmtCurrency(npvA, unit, true);
+      document.getElementById("kpiSubA").textContent = `PV of FCF: ${fmtCurrency(pvA, unit)} | CapEx: -${fmtCurrency(capexA, unit)}`;
+
+      const baseDelta = npvBBase - npvA;
+      document.getElementById("kpiNpvBBase").textContent = fmtCurrency(npvBBase, unit, true);
+      document.getElementById("kpiSubBBase").textContent = `Base Delta vs. Opt A: ${fmtCurrency(baseDelta, unit, true)}`;
+
+      document.getElementById("kpiNpvBStressed").textContent = fmtCurrency(npvBStressed, unit, true);
+      document.getElementById("kpiSubBStressed").textContent = `Stressed FCF: ${fmtCurrency(fcfBStressed, unit)}/yr @ ${(waccBStressed * 100).toFixed(2)}%`;
+
+      const badge = document.getElementById("stressStatusBadge");
+      const stressedCard = document.getElementById("stressedCard");
+      if (npvBStressed >= npvA && npvBStressed >= 0) {
+        badge.textContent = "Beats Opt A & Positive";
+        badge.className = "px-2 py-0.5 text-[11px] font-bold rounded-full bg-emerald-100 text-emerald-800";
+        stressedCard.className = "bg-white p-4 rounded-xl shadow-sm border border-emerald-300 transition";
+      } else if (npvBStressed >= 0) {
+        badge.textContent = "NPV Positive (Below A)";
+        badge.className = "px-2 py-0.5 text-[11px] font-bold rounded-full bg-amber-100 text-amber-800";
+        stressedCard.className = "bg-white p-4 rounded-xl shadow-sm border border-amber-300 transition";
+      } else {
+        badge.textContent = "NPV Negative";
+        badge.className = "px-2 py-0.5 text-[11px] font-bold rounded-full bg-rose-100 text-rose-800";
+        stressedCard.className = "bg-rose-50/40 p-4 rounded-xl shadow-sm border border-rose-300 transition";
+      }
+
+      document.getElementById("kpiSafetyMargin").textContent = `${fmtCurrency(safetyMargin, unit, true)}/yr`;
+      document.getElementById("kpiSubBreakEven").textContent = `Max tolerable Base FCF drop: ${maxDropPct.toFixed(1)}%`;
+
+      document.getElementById("summaryTableBody").innerHTML = `
+        <tr>
+          <td class="py-2 px-2.5 text-slate-600">Initial CapEx</td>
+          <td class="py-2 px-2.5">-${fmtCurrency(capexA, unit)}</td>
+          <td class="py-2 px-2.5">-${fmtCurrency(capexB, unit)}</td>
+          <td class="py-2 px-2.5">-${fmtCurrency(capexB, unit)}</td>
+        </tr>
+        <tr>
+          <td class="py-2 px-2.5 text-slate-600">Annual FCF (Yr 1–5)</td>
+          <td class="py-2 px-2.5">${fmtCurrency(fcfA, unit, true)}</td>
+          <td class="py-2 px-2.5">${fmtCurrency(fcfBBase, unit, true)}</td>
+          <td class="py-2 px-2.5 font-semibold">${fmtCurrency(fcfBStressed, unit, true)}</td>
+        </tr>
+        <tr>
+          <td class="py-2 px-2.5 text-slate-600">Project WACC</td>
+          <td class="py-2 px-2.5">${(waccA * 100).toFixed(2)}%</td>
+          <td class="py-2 px-2.5">${(waccBBase * 100).toFixed(2)}%</td>
+          <td class="py-2 px-2.5">${(waccBStressed * 100).toFixed(2)}%</td>
+        </tr>
+        <tr>
+          <td class="py-2 px-2.5 text-slate-600">PV of 5-Yr FCF</td>
+          <td class="py-2 px-2.5">${fmtCurrency(pvA, unit, true)}</td>
+          <td class="py-2 px-2.5">${fmtCurrency(pvBBase, unit, true)}</td>
+          <td class="py-2 px-2.5">${fmtCurrency(pvBStressed, unit, true)}</td>
+        </tr>
+        <tr class="bg-slate-50 font-bold text-slate-900">
+          <td class="py-2 px-2.5">5-Yr Net Present Value</td>
+          <td class="py-2 px-2.5">${fmtCurrency(npvA, unit, true)}</td>
+          <td class="py-2 px-2.5 text-teal-700">${fmtCurrency(npvBBase, unit, true)}</td>
+          <td class="py-2 px-2.5 ${npvBStressed >= 0 ? 'text-emerald-700' : 'text-rose-700'}">${fmtCurrency(npvBStressed, unit, true)}</td>
+        </tr>
+      `;
+
+      const verdictEl = document.getElementById("cfoVerdictText");
+      const statusText = npvBStressed >= 0
+        ? `<strong>Option B remains NPV-positive (${fmtCurrency(npvBStressed, unit, true)})</strong>, exceeding the break-even floor of <strong>${fmtCurrency(breakEvenFcfB, unit)}/yr</strong>.`
+        : `<strong>Option B turns NPV-negative (${fmtCurrency(npvBStressed, unit, true)})</strong>, falling below the <strong>${fmtCurrency(breakEvenFcfB, unit)}/yr</strong> break-even floor by ${fmtCurrency(Math.abs(safetyMargin), unit)}/yr.`;
+      verdictEl.innerHTML = `${statusText} <br/><span class="text-teal-800 font-semibold">Recommended Guardrail:</span> ${p.guardrailNote}`;
+
+      updateChart(capexA, pvA, npvA, capexB, pvBBase, npvBBase, pvBStressed, npvBStressed, unit);
+    }
+
+    function updateChart(capexA, pvA, npvA, capexB, pvBBase, npvBBase, pvBStressed, npvBStressed, unit) {
+      const ctx = document.getElementById("npvChart").getContext("2d");
+      const datasets = [
+        {
+          label: `Initial CapEx (${unit})`,
+          data: [-capexA, -capexB, -capexB],
+          backgroundColor: "#94a3b8",
+          borderRadius: 5
+        },
+        {
+          label: `PV of 5-Yr Cash Flows (${unit})`,
+          data: [pvA, pvBBase, pvBStressed],
+          backgroundColor: "#0d9488",
+          borderRadius: 5
+        },
+        {
+          label: `Net Present Value (${unit})`,
+          data: [npvA, npvBBase, npvBStressed],
+          backgroundColor: [
+            "#475569",
+            "#0f766e",
+            npvBStressed >= 0 ? "#059669" : "#e11d48"
+          ],
+          borderRadius: 5
+        }
+      ];
+
+      if (npvChartInstance) {
+        npvChartInstance.data.datasets = datasets;
+        npvChartInstance.update();
+      } else {
+        npvChartInstance = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: ["Option A (Base)", "Option B (Base)", "Option B (Stress-Tested)"],
+            datasets: datasets
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: "bottom" } },
+            scales: {
+              y: {
+                grid: { color: "#e2e8f0" },
+                title: { display: true, text: `Value (${unit})` }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    function exportMarkdownTable() {
+      const p = PRESETS[currentPresetKey];
+      const rows = document.querySelectorAll("#summaryTableBody tr");
+      let md = `### ${p.name} — 5-Year DCF & Sensitivity Summary (${p.students})\n\n`;
+      md += `| Metric | Option A (Base) | Option B (Base) | Option B (Stressed) |\n`;
+      md += `| :--- | :--- | :--- | :--- |\n`;
+      rows.forEach(r => {
+        const cols = Array.from(r.querySelectorAll("td")).map(td => td.innerText.trim());
+        md += `| ${cols.join(" | ")} |\n`;
+      });
+      navigator.clipboard.writeText(md);
+      const toast = document.getElementById("copyToast");
+      toast.classList.remove("hidden");
+      setTimeout(() => toast.classList.add("hidden"), 3000);
+    }
+
+    window.onload = () => loadPreset("target");
+  </script>
+</body>
+</html>
