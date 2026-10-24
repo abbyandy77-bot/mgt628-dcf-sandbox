@@ -44,7 +44,6 @@ Where:
 ## 📊 Included Project Presets
 
 | # | Project / Company | Focus Area | Unit |
-|---|---|---|---|---|
 | **1** | **Target Packaging** | Owned-brand circular packaging & EPR fee avoidance | `$\text{M}$` |
 | **2** | **Delta Air Lines SAF** | Multi-year sustainable aviation fuel offtake & Scope 3 co-funding | `$\text{M}$` |
 | **3** | **Ford Battery Recycling** | Closed-loop EV battery recycling & EU compliance | `$\text{M}$` |
