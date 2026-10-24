@@ -43,15 +43,15 @@ Where:
 
 ## 📊 Included Project Presets
 
-| # | Project / Company | Student Author(s) | Focus Area | Unit |
+| # | Project / Company | Focus Area | Unit |
 |---|---|---|---|---|
-| **1** | **Target Packaging** | Gianna Calabro & Kelsey Winters | Owned-brand circular packaging & EPR fee avoidance | `$\text{M}$` |
-| **2** | **Delta Air Lines SAF** | Darren Carter | Multi-year sustainable aviation fuel offtake & Scope 3 co-funding | `$\text{M}$` |
-| **3** | **Ford Battery Recycling** | William Cleverley | Closed-loop EV battery recycling & EU compliance | `$\text{M}$` |
-| **4** | **Tampa Bay Markets** | Guillermo Jauregui | Staged multi-market reusable packaging pilot | `$\text{K}$` |
-| **5** | **TPA Airport / HCAA** | Katie Nichter | Proactive Airside D SAF hydrant & infrastructure readiness | `$\text{M}$` |
-| **6** | **Morgan Stanley** | Alexa Sifakis | Audited impact-outcome & financed-emissions analytics | `$\text{M}$` |
-| **7** | **Custom Project** | *User Defined* | User-specified CapEx, cash-flow drivers, and WACC | `$\text{M}$` / `$\text{K}$` |
+| **1** | **Target Packaging** | Owned-brand circular packaging & EPR fee avoidance | `$\text{M}$` |
+| **2** | **Delta Air Lines SAF** | Multi-year sustainable aviation fuel offtake & Scope 3 co-funding | `$\text{M}$` |
+| **3** | **Ford Battery Recycling** | Closed-loop EV battery recycling & EU compliance | `$\text{M}$` |
+| **4** | **Tampa Bay Markets** | Staged multi-market reusable packaging pilot | `$\text{K}$` |
+| **5** | **TPA Airport / HCAA** | Proactive Airside D SAF hydrant & infrastructure readiness | `$\text{M}$` |
+| **6** | **Morgan Stanley** | Audited impact-outcome & financed-emissions analytics | `$\text{M}$` |
+| **7** | **Custom Project** | User-specified CapEx, cash-flow drivers, and WACC | `$\text{M}$` / `$\text{K}$` |
 
 ---
 
